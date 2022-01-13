@@ -180,12 +180,15 @@ function value(value) {
 }
 function transform(transform) {
   for (let i = 0; i < this.length; i += 1) {
+    this[i].style.webkitTransform =
     this[i].style.transform = transform;
+    this[i].style.msTransform = transform.replace(/translate3d(\([^,]+,[^,]+),[^)]+(\))/, 'translate$1$2'); // IE9
   }
   return this;
 }
 function transition(duration) {
   for (let i = 0; i < this.length; i += 1) {
+    this[i].style.webkitTransitionDuration =
     this[i].style.transitionDuration =
       typeof duration !== 'string' ? `${duration}ms` : duration;
   }
@@ -338,12 +341,19 @@ function trigger(...args) {
 }
 function transitionEnd(callback) {
   const dom = this;
+  let called = false;
   function fireCallBack(e) {
     if (e.target !== this) return;
+    if (called) {
+      return;
+    }
+    called = true;
     callback.call(this, e);
+    dom.off('webkitTransitionEnd', fireCallBack);
     dom.off('transitionend', fireCallBack);
   }
   if (callback) {
+    dom.on('webkitTransitionEnd', fireCallBack);
     dom.on('transitionend', fireCallBack);
   }
   return this;
